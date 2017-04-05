@@ -15,20 +15,21 @@ testJSONEncodeWithDescAndFacets :: Test
 testJSONEncodeWithDescAndFacets =
   TestCase $ assertEqual "With description and facets"
                          (encode Ripple
-                           { summary = "A Summary"
-                           , description = Just "Description"
-                           , facets = ["simple", "interesting"]
-                           })
+                                 { summary = "A Summary"
+                                 , description = Just "Description"
+                                 , facets = ["simple", "interesting"]
+                                 })
                          "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[\"simple\",\"interesting\"]}"
 
 testJSONDecode :: Test
 testJSONDecode = do
-  let ripple = Just Ripple { summary = "A Summary"
-                      , description = Just "Description"
-                      , facets = ["simple", "interesting"]
-                      }
+  let ripple = Just Ripple
+                    { summary = "A Summary"
+                    , description = Just "Description"
+                    , facets = ["simple", "interesting"]
+                    }
   TestCase $ assertEqual "JSON decode"
-                         ((decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[\"simple\",\"interesting\"]}") :: Maybe Ripple)
+                         (decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[\"simple\",\"interesting\"]}")
                          ripple
 
 main :: IO Counts
