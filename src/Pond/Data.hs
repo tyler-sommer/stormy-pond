@@ -5,9 +5,26 @@ module Pond.Data
   ) where
 
 import Data.Aeson
+import Data.String
 import GHC.Generics
 
-type Facet = String
+data Facet =
+  Facet
+  { name :: String
+  , group :: Maybe String
+  } deriving (Generic, Show, Eq)
+
+instance IsString Facet where
+  fromString n =
+    Facet
+    { name = n
+    , group = Nothing
+    }
+
+instance ToJSON Facet where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Facet
 
 data Ripple =
   Ripple
