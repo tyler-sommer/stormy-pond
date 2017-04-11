@@ -10,21 +10,27 @@ import Pond.Data
 import qualified Data.ByteString.Lazy.Char8 as LS
 
 data Command =
-  Command
-  { name :: String
-  , args :: [String]
-  } deriving (Show)
+  AddCommand deriving (Show)
 
-parseArgs :: [String] -> IO Command
-parseArgs [] = do
+command :: String -> Either String Command
+command "add" = Right AddCommand
+command unk = Left ("unknown command \"" ++ unk ++ "\"")
+
+printUsageAndExit :: IO Command
+printUsageAndExit = do
   putStrLn "Usage: pond <command> [arg, ...]"
   exitWith (ExitFailure 1)
-parseArgs argv = return $ Command { name = head argv, args = tail argv }
+
+parseArgs :: [String] -> IO Command
+parseArgs [] = printUsageAndExit
+parseArgs argv =
+  case command (head argv) of
+    Right cmd -> return $ cmd
+    Left err -> do
+      putStrLn ("error: " ++ err)
+      printUsageAndExit
 
 main :: IO ()
 main = do
-  command <- getArgs >>= parseArgs
-  print command
-  let facet = "interesting" :: Facet
-  let ripple = Ripple { summary = "do a thing", description = Nothing, facets = [facet] }
-  LS.putStrLn (encode ripple)
+  cmd <- getArgs >>= parseArgs
+  print cmd
