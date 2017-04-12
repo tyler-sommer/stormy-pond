@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Pond.Data
-  ( Facet
+  ( Facet(..)
   , Ripple(..)
   ) where
 

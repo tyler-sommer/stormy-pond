@@ -29,6 +29,8 @@ executable pond
                      , stormy-pond
                      , aeson
                      , bytestring
+                     , process
+                     , directory
   default-language:    Haskell2010
 
 test-suite stormy-pond-test
