@@ -1,3 +1,11 @@
+{-|
+Module      : Pond.Data
+Description : Data facilities for pond
+Copyright   : (c) 2017 Tyler Sommer
+License     : MIT
+Maintainer  : sommertm@gmail.com
+Stability   : experimental
+-}
 {-# LANGUAGE DeriveGeneric #-}
 module Pond.Data
   ( Facet(..)
@@ -8,6 +16,8 @@ import Data.Aeson
 import Data.String
 import GHC.Generics
 
+-- | A facet is a label describing a ripple. Facets can be used to group and
+-- filter ripples.
 data Facet =
   Facet
   { name :: String
@@ -26,6 +36,7 @@ instance ToJSON Facet where
 
 instance FromJSON Facet
 
+-- | A ripple is a task or other list item.
 data Ripple =
   Ripple
   { summary :: String

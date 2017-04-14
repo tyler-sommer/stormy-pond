@@ -1,7 +1,7 @@
 name:                stormy-pond
 version:             0.1.0.0
 synopsis:            A personal task manager.
--- description:
+description:         pond is a utility for managing tasks and other kinds of lists.
 homepage:            https://github.com/tyler-sommer/stormy-pond
 license:             MIT
 license-file:        LICENSE
