@@ -35,8 +35,7 @@ parseEditorLine ParseDesc r (('F':'a':'c':'e':'t':':':' ':s):xs) =
 parseEditorLine ParseDesc r (s:xs) =
   case (description r) of
     Just desc -> parseEditorLine ParseDesc (r { description = Just (desc ++ "\n" ++ s) }) xs
-    _         -> parseEditorLine ParseDesc (r { description = (Just s) }) xs
-
+    _         -> parseEditorLine ParseDesc (r { description = Just s }) xs
 parseEditorLine ParseTag r (s:xs) =
   parseEditorLine ParseDesc (r { facets = (facets r) ++ [(fromString s :: Facet)] }) xs
 parseEditorLine _ r _ = r
@@ -45,12 +44,22 @@ parseEditorLines :: [String] -> Ripple
 parseEditorLines lines = parseEditorLine ParseAny (Ripple "" Nothing []) lines
 
 usageText :: String
-usageText = unlines
-  [ "Usage: pond <command> [arg, ...]"
-  , ""
+usageText = "Usage: pond <command> [arg, ...]"
+
+helpText :: String
+helpText = unlines
+  [ ""
   , "Commands:"
   , "\tadd\t\tAdd a new ripple"
   , "\tadd [-t facet [-t facet]] [summary]"
+  , "\thelp\t\tShow help text"
+  , ""
+  , "pond is a utility for tracking and managing tasks and other lists. Each"
+  , "pond contains a collection of items called ripples. Each ripple must have"
+  , "a summary and may be tagged and grouped using labels called facets."
+  , ""
+  , "Invoking the \"add\" or \"edit\" commands without arguments will open your"
+  , "system editor with a git-style format for modifying ripples."
   ]
 
 templateText :: Ripple -> String
@@ -87,8 +96,14 @@ openEditor ripple = do
 
 printUsageAndExit :: IO Ripple
 printUsageAndExit = do
-  putStr usageText
+  putStrLn usageText
   exitWith (ExitFailure 1)
+
+printHelpAndExit :: IO Ripple
+printHelpAndExit = do
+  putStrLn usageText
+  putStr helpText
+  exitWith ExitSuccess
 
 main :: IO ()
 main = do
@@ -101,7 +116,9 @@ main = do
             openEditor s
           _ -> do
             return $ s
-      unk:s -> do
+      ["help"] -> printHelpAndExit
+      "help":_ -> printHelpAndExit
+      unk:_    -> do
         putStrLn ("unknown command: " ++ unk)
         printUsageAndExit
       _ -> printUsageAndExit)
