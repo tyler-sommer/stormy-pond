@@ -3,7 +3,6 @@ module Main where
 
 import Data.Aeson
 import Data.String
-import Data.List
 import System.Directory
 import System.Environment
 import System.Exit
@@ -41,7 +40,7 @@ parseEditorLine ParseTag r (s:xs) =
 parseEditorLine _ r _ = r
 
 parseEditorLines :: [String] -> Ripple
-parseEditorLines lines = parseEditorLine ParseAny (Ripple "" Nothing []) lines
+parseEditorLines lns = parseEditorLine ParseAny (Ripple "" Nothing []) lns
 
 usageText :: String
 usageText = "Usage: pond <command> [arg, ...]"
@@ -63,7 +62,7 @@ helpText = unlines
   ]
 
 templateText :: Ripple -> String
-templateText ripple = unlines
+templateText _ = unlines
   [ "# Edit the ripple above. Summary is the first line, followed by a blank line"
   , "# then an optional long description. Add facets with \"Facet: facet\"."
   , "# Lines starting with \"#\" are ignored."

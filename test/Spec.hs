@@ -19,7 +19,7 @@ testJSONEncodeWithDescAndFacets =
                                  , description = Just "Description"
                                  , facets = ["simple", "interesting"]
                                  })
-                         "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[\"simple\",\"interesting\"]}"
+                         "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}"
 
 testJSONDecode :: Test
 testJSONDecode = do
@@ -29,7 +29,7 @@ testJSONDecode = do
                     , facets = ["simple", "interesting"]
                     }
   TestCase $ assertEqual "JSON decode"
-                         (decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[\"simple\",\"interesting\"]}")
+                         (decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}")
                          ripple
 
 main :: IO Counts
