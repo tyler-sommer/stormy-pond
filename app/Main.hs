@@ -62,8 +62,9 @@ helpText = unlines
   ]
 
 templateText :: Ripple -> String
-templateText _ = unlines
-  [ "# Edit the ripple above. Summary is the first line, followed by a blank line"
+templateText r = unlines
+  [ (show r) ++
+    "# Edit the ripple above. Summary is the first line, followed by a blank line"
   , "# then an optional long description. Add facets with \"Facet: facet\"."
   , "# Lines starting with \"#\" are ignored."
   , "#"
@@ -92,6 +93,30 @@ openEditor ripple = do
     createProcess (proc "bash" ["-c", ("$EDITOR " ++ file ++ " && cat " ++ file)]){ std_out = CreatePipe }
   contents <- hGetContents hout
   return $ parseEditorLines (lines contents)
+
+readIndex :: FilePath -> IO Pond
+readIndex base = do
+  handle   <- openFile (base ++ "/" ++ "index.json") ReadMode
+  contents <- hGetContents handle
+  case decode (LS.pack contents) of
+    Just p -> return $ p
+    _      -> return $ (Pond [])
+
+readRipple :: FilePath -> FilePath -> IO Ripple
+readRipple base csum = do
+  handle   <- openFile (base ++ "/" ++ (csum ++ ".json")) ReadMode
+  contents <- hGetContents handle
+  case decode (LS.pack contents) of
+    Just r -> return $ r
+    _      -> return $ (Ripple "" Nothing [])
+
+writeIndex :: Pond -> FilePath -> IO ()
+writeIndex pond base = do
+  writeFile (base ++ "/" ++ "index.json") (LS.unpack (encode pond))
+
+writeRipple :: Ripple -> FilePath -> IO ()
+writeRipple ripple base = do
+  writeFile (base ++ "/" ++ ((checksum ripple) ++ ".json")) (LS.unpack (encode ripple))
 
 printUsageAndExit :: IO Ripple
 printUsageAndExit = do
@@ -122,4 +147,8 @@ main = do
         printUsageAndExit
       _ -> printUsageAndExit)
   print r
+  home <- getHomeDirectory
+  let pondDir = home ++ "/" ++ ".pond"
+  _ <- createDirectoryIfMissing True pondDir
   LS.putStrLn (encode r)
+  writeRipple r pondDir
