@@ -18,13 +18,14 @@ module Pond.Data
 
 import Data.Aeson
 import Data.String
-import Data.Set (Set, insert)
+import Data.Map (Map)
 import GHC.Generics
 
 import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy.Char8 as LS
+import qualified Data.Map as Map
 
 -- | A facet is a label describing a ripple. Facets can be used to group and
 -- filter ripples.
@@ -81,9 +82,23 @@ instance ToJSON Ripple where
 
 instance FromJSON Ripple
 
+data Shimmer =
+  Shimmer
+  { rippleId :: RippleID
+  , next :: Maybe RippleID
+  , date :: String
+  } deriving (Generic, Show, Eq)
+
+instance ToJSON Shimmer where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Shimmer
+
 data Pond =
   Pond
-  { ripples :: Set RippleID
+  { center :: Maybe RippleID
+  , outer :: Maybe RippleID
+  , ripples :: Map RippleID Shimmer
   } deriving (Generic, Show, Eq)
 
 instance ToJSON Pond where
@@ -91,6 +106,18 @@ instance ToJSON Pond where
 
 instance FromJSON Pond
 
-with :: Pond -> Ripple -> Pond
-with p r =
-  p { ripples = insert (checksum r) (ripples p) }
+with :: Ripple -> Pond -> Pond
+with r p =
+  po { ripples = Map.insert sum shimmer (ripples po), center = Just c, outer = Just sum }
+  where
+    sum = checksum r
+    c = case center p of
+      Just center -> center
+      _           -> sum
+    fk = case outer p of
+      Just k -> k
+      _      -> ""
+    po = case Map.lookup fk (ripples p) of
+      Just sh -> p { ripples = Map.insert fk (sh { next = Just sum }) (ripples p) }
+      _       -> p
+    shimmer = Shimmer { rippleId = sum, next = Nothing, date = "2017-01-01" }

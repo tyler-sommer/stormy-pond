@@ -2,7 +2,6 @@
 module Main where
 
 import Data.Aeson
-import Data.Set (Set, empty)
 import Data.String
 import System.Directory
 import System.Environment
@@ -14,6 +13,7 @@ import System.Process
 import Pond.Data
 
 import qualified Data.ByteString.Lazy.Char8 as LS
+import qualified Data.Map as Map
 
 data State = ParseAny | ParseTag | ParseDesc
 
@@ -104,7 +104,7 @@ readIndex base = do
   contents <- quietGetContents (base ++ "/" ++ "index.json")
   case decode (LS.pack contents) of
     Just p -> return $ p
-    _      -> return $ (Pond empty)
+    _      -> return $ (Pond Nothing Nothing Map.empty)
 
 readRipple :: FilePath -> FilePath -> IO Ripple
 readRipple base sum = do
@@ -153,6 +153,6 @@ main = do
   let pondDir = home ++ "/" ++ ".pond"
   _ <- createDirectoryIfMissing True pondDir
   pond <- readIndex pondDir
-  writeIndex (with pond r) pondDir
+  writeIndex (with r pond) pondDir
   writeRipple r pondDir
   LS.putStrLn (encode r)
