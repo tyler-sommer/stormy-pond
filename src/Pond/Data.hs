@@ -13,10 +13,12 @@ module Pond.Data
   , Pond(..)
 
   , checksum
+  , with
   ) where
 
 import Data.Aeson
 import Data.String
+import Data.Set (Set, insert)
 import GHC.Generics
 
 import qualified Crypto.Hash.SHA256 as SHA256
@@ -81,10 +83,14 @@ instance FromJSON Ripple
 
 data Pond =
   Pond
-  { ripples :: [RippleID]
+  { ripples :: Set RippleID
   } deriving (Generic, Show, Eq)
 
 instance ToJSON Pond where
   toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON Pond
+
+with :: Pond -> Ripple -> Pond
+with p r =
+  p { ripples = insert (checksum r) (ripples p) }

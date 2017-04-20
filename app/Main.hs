@@ -2,11 +2,13 @@
 module Main where
 
 import Data.Aeson
+import Data.Set (Set, empty)
 import Data.String
 import System.Directory
 import System.Environment
 import System.Exit
 import System.IO
+import System.IO.Error
 import System.Process
 
 import Pond.Data
@@ -94,18 +96,19 @@ openEditor ripple = do
   contents <- hGetContents hout
   return $ parseEditorLines (lines contents)
 
+quietGetContents :: FilePath -> IO String
+quietGetContents f = catchIOError (readFile f) (\_ -> return $ "")
+
 readIndex :: FilePath -> IO Pond
 readIndex base = do
-  handle   <- openFile (base ++ "/" ++ "index.json") ReadMode
-  contents <- hGetContents handle
+  contents <- quietGetContents (base ++ "/" ++ "index.json")
   case decode (LS.pack contents) of
     Just p -> return $ p
-    _      -> return $ (Pond [])
+    _      -> return $ (Pond empty)
 
 readRipple :: FilePath -> FilePath -> IO Ripple
-readRipple base csum = do
-  handle   <- openFile (base ++ "/" ++ (csum ++ ".json")) ReadMode
-  contents <- hGetContents handle
+readRipple base sum = do
+  contents <- quietGetContents (base ++ "/" ++ sum ++ ".json")
   case decode (LS.pack contents) of
     Just r -> return $ r
     _      -> return $ (Ripple "" Nothing [])
@@ -136,10 +139,9 @@ main = do
       "add":xs -> do
         let s = parseArgs xs
         case s of
-          (Ripple "" _ _) -> do
-            openEditor s
-          _ -> do
-            return $ s
+          (Ripple "" _ _) -> openEditor s
+          _               -> return $ s
+
       ["help"] -> printHelpAndExit
       "help":_ -> printHelpAndExit
       unk:_    -> do
@@ -150,5 +152,7 @@ main = do
   home <- getHomeDirectory
   let pondDir = home ++ "/" ++ ".pond"
   _ <- createDirectoryIfMissing True pondDir
-  LS.putStrLn (encode r)
+  pond <- readIndex pondDir
+  writeIndex (with pond r) pondDir
   writeRipple r pondDir
+  LS.putStrLn (encode r)
