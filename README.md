@@ -3,7 +3,8 @@ stormy pond
 
 pond is a utility for tracking and managing tasks and other lists. Each
 pond contains a collection of items called ripples. Each ripple a summary,
-optional description, and may be tagged and grouped using labels called facets.
+optional description, and may be tagged and grouped using labels called 
+reflections.
 
 
 Installation

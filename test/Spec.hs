@@ -5,32 +5,32 @@ import Pond.Data
 
 import Test.HUnit
 
-testJSONEncodeNoDescNoFacets :: Test
-testJSONEncodeNoDescNoFacets =
-  TestCase $ assertEqual "No description or facets"
-                         (encode Ripple { summary = "Summary", description = Nothing, facets = []})
-                         "{\"summary\":\"Summary\",\"description\":null,\"facets\":[]}"
+testJSONEncodeNoDescNoReflections :: Test
+testJSONEncodeNoDescNoReflections =
+  TestCase $ assertEqual "No description or reflections"
+                         (encode Ripple { summary = "Summary", description = Nothing, reflections = []})
+                         "{\"summary\":\"Summary\",\"description\":null,\"reflections\":[]}"
 
-testJSONEncodeWithDescAndFacets :: Test
-testJSONEncodeWithDescAndFacets =
-  TestCase $ assertEqual "With description and facets"
+testJSONEncodeWithDescAndReflections :: Test
+testJSONEncodeWithDescAndReflections =
+  TestCase $ assertEqual "With description and reflections"
                          (encode Ripple
                                  { summary = "A Summary"
                                  , description = Just "Description"
-                                 , facets = ["simple", "interesting"]
+                                 , reflections = ["simple", "interesting"]
                                  })
-                         "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}"
+                         "{\"summary\":\"A Summary\",\"description\":\"Description\",\"reflections\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}"
 
 testJSONDecode :: Test
 testJSONDecode = do
   let ripple = Just Ripple
                     { summary = "A Summary"
                     , description = Just "Description"
-                    , facets = ["simple", "interesting"]
+                    , reflections = ["simple", "interesting"]
                     }
   TestCase $ assertEqual "JSON decode"
-                         (decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"facets\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}")
+                         (decode "{\"summary\":\"A Summary\",\"description\":\"Description\",\"reflections\":[{\"name\":\"simple\",\"group\":null},{\"name\":\"interesting\",\"group\":null}]}")
                          ripple
 
 main :: IO Counts
-main = runTestTT $ TestList [testJSONEncodeNoDescNoFacets, testJSONEncodeWithDescAndFacets, testJSONDecode]
+main = runTestTT $ TestList [testJSONEncodeNoDescNoReflections, testJSONEncodeWithDescAndReflections, testJSONDecode]

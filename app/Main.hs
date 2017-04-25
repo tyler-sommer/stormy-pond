@@ -3,6 +3,7 @@ module Main where
 
 import Data.Aeson
 import Data.String
+import Data.Time (getCurrentTime)
 import System.Directory
 import System.Environment
 import System.Exit
@@ -17,14 +18,19 @@ import qualified Data.Map as Map
 
 data State = ParseAny | ParseTag | ParseDesc
 
-parseArg :: State -> Ripple -> [String] -> Ripple
-parseArg ParseAny r ("-t":xs) = parseArg ParseTag r xs
-parseArg ParseAny r (s:xs)    = parseArg ParseAny (r { summary = s }) xs
-parseArg ParseTag r (s:xs)    = parseArg ParseAny (r { facets = (facets r) ++ [(fromString s :: Facet)] }) xs
-parseArg _ r _                = r
-
+-- | parseArgs parses the command-line arguments, creating a new 'Ripple'.
 parseArgs :: [String] -> Ripple
 parseArgs argv = parseArg ParseAny (Ripple "" Nothing []) argv
+
+parseArg :: State -> Ripple -> [String] -> Ripple
+parseArg ParseAny r ("-r":xs) = parseArg ParseTag r xs
+parseArg ParseAny r (s:xs)    = parseArg ParseAny (r { summary = s }) xs
+parseArg ParseTag r (s:xs)    = parseArg ParseAny (r { reflections = (reflections r) ++ [(fromString s :: Reflection)] }) xs
+parseArg _ r _                = r
+
+-- | parseEditorLines parses input received from an editor, creating a new 'Ripple'.
+parseEditorLines :: [String] -> Ripple
+parseEditorLines lns = parseEditorLine ParseAny (Ripple "" Nothing []) lns
 
 parseEditorLine :: State -> Ripple -> [String] -> Ripple
 parseEditorLine ParseAny r (s:xs)        = parseEditorLine ParseDesc (r { summary = s }) xs
@@ -38,11 +44,8 @@ parseEditorLine ParseDesc r (s:xs) =
     Just desc -> parseEditorLine ParseDesc (r { description = Just (desc ++ "\n" ++ s) }) xs
     _         -> parseEditorLine ParseDesc (r { description = Just s }) xs
 parseEditorLine ParseTag r (s:xs) =
-  parseEditorLine ParseDesc (r { facets = (facets r) ++ [(fromString s :: Facet)] }) xs
+  parseEditorLine ParseDesc (r { reflections = (reflections r) ++ [(fromString s :: Reflection)] }) xs
 parseEditorLine _ r _ = r
-
-parseEditorLines :: [String] -> Ripple
-parseEditorLines lns = parseEditorLine ParseAny (Ripple "" Nothing []) lns
 
 usageText :: String
 usageText = "Usage: pond <command> [arg, ...]"
@@ -51,13 +54,14 @@ helpText :: String
 helpText = unlines
   [ ""
   , "Commands:"
+  , "\tlist\t\tList ripples"
   , "\tadd\t\tAdd a new ripple"
-  , "\tadd [-t facet [-t facet]] [summary]"
+  , "\tadd [-r reflection [-r ...]] [summary]"
   , "\thelp\t\tShow help text"
   , ""
   , "pond is a utility for tracking and managing tasks and other lists. Each"
   , "pond contains a collection of items called ripples. Each ripple must have"
-  , "a summary and may be tagged and grouped using labels called facets."
+  , "a summary and may be tagged and grouped using labels called reflections."
   , ""
   , "Invoking the \"add\" or \"edit\" commands without arguments will open your"
   , "system editor with a git-style format for modifying ripples."
@@ -67,7 +71,7 @@ templateText :: Ripple -> String
 templateText r = unlines
   [ (show r) ++
     "# Edit the ripple above. Summary is the first line, followed by a blank line"
-  , "# then an optional long description. Add facets with \"Facet: facet\"."
+  , "# then an optional long description. Add reflections with \"Reflection: reflection\"."
   , "# Lines starting with \"#\" are ignored."
   , "#"
   , "# Example:"
@@ -76,8 +80,8 @@ templateText r = unlines
   , "# The rain gutters at the house are getting pretty nasty. It's about time to"
   , "# clean them out."
   , "#"
-  , "# Facet: chore"
-  , "# Facet: weekend"
+  , "# Reflection: chore"
+  , "# Reflection: weekend"
   ]
 
 openEditor :: Ripple -> IO Ripple
@@ -132,8 +136,21 @@ printHelpAndExit = do
   putStr helpText
   exitWith ExitSuccess
 
+printShimmer :: Pond -> Shimmer -> IO ()
+printShimmer p s = do
+  putStrLn ("ID: " ++ (rippleId s) ++ "\nDate: " ++ (show (date s)))
+  case nextM p s of
+    Just sh -> do
+      putStrLn ""
+      printShimmer p sh
+    _ -> return ()
+
 main :: IO ()
 main = do
+  home <- getHomeDirectory
+  let pondDir = home ++ "/.pond"
+  _ <- createDirectoryIfMissing True pondDir
+  pond <- readIndex pondDir
   r <- getArgs >>= (\argv ->
     case argv of
       "add":xs -> do
@@ -141,7 +158,12 @@ main = do
         case s of
           (Ripple "" _ _) -> openEditor s
           _               -> return $ s
-
+      "list":xs -> do
+        case centerM pond of
+          Just s -> do
+            printShimmer pond s
+            exitWith ExitSuccess
+          _ -> exitWith (ExitFailure 1)
       ["help"] -> printHelpAndExit
       "help":_ -> printHelpAndExit
       unk:_    -> do
@@ -149,10 +171,7 @@ main = do
         printUsageAndExit
       _ -> printUsageAndExit)
   print r
-  home <- getHomeDirectory
-  let pondDir = home ++ "/" ++ ".pond"
-  _ <- createDirectoryIfMissing True pondDir
-  pond <- readIndex pondDir
-  writeIndex (with r pond) pondDir
+  now <- getCurrentTime
+  writeIndex (with r now pond) pondDir
   writeRipple r pondDir
   LS.putStrLn (encode r)

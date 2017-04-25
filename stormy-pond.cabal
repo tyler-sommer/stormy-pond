@@ -20,8 +20,9 @@ library
                      , aeson
                      , bytestring
                      , containers
-                     , cryptohash-sha256
                      , base16-bytestring
+                     , cryptohash-sha256
+                     , time
   default-language:    Haskell2010
 
 executable pond
@@ -35,6 +36,7 @@ executable pond
                      , containers
                      , process
                      , directory
+                     , time
   default-language:    Haskell2010
 
 test-suite stormy-pond-test
