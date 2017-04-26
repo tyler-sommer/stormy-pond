@@ -91,7 +91,7 @@ openEditor ripple = do
   hPutStr tmp (summary ripple)
   case description ripple of
     Just desc -> hPutStrLn tmp (unlines ["", "", desc])
-    _ -> hPutStrLn tmp ""
+    Nothing   -> hPutStrLn tmp ""
   hPutStr tmp (templateText ripple)
   hFlush tmp
   hClose tmp
@@ -106,16 +106,16 @@ quietGetContents f = catchIOError (readFile f) (\_ -> return $ "")
 readIndex :: FilePath -> IO Pond
 readIndex base = do
   contents <- quietGetContents (base ++ "/" ++ "index.json")
-  case decode (LS.pack contents) of
-    Just p -> return $ p
-    _      -> return $ (Pond Nothing Nothing Map.empty)
+  return $ case decode (LS.pack contents) of
+    Just p  -> p
+    Nothing -> (Pond Nothing Nothing Map.empty)
 
 readRipple :: FilePath -> FilePath -> IO Ripple
 readRipple base sum = do
   contents <- quietGetContents (base ++ "/" ++ sum ++ ".json")
-  case decode (LS.pack contents) of
-    Just r -> return $ r
-    _      -> return $ (Ripple "" Nothing [])
+  return $ case decode (LS.pack contents) of
+    Just r  -> r
+    Nothing -> (Ripple "" Nothing [])
 
 writeIndex :: Pond -> FilePath -> IO ()
 writeIndex pond base = do
@@ -138,17 +138,16 @@ printHelpAndExit = do
 
 printShimmer :: Pond -> Shimmer -> IO ()
 printShimmer p s = do
-  putStrLn ("ID: " ++ (rippleId s) ++ "\nDate: " ++ (show (date s)))
+  putStrLn $ "ID: " ++ (rippleId s) ++ "\nDate: " ++ (show (date s))
   case nextM p s of
     Just sh -> do
       putStrLn ""
       printShimmer p sh
-    _ -> return ()
+    Nothing -> return ()
 
 main :: IO ()
 main = do
-  home <- getHomeDirectory
-  let pondDir = home ++ "/.pond"
+  pondDir <- getHomeDirectory >>= (\home -> return $ home ++ "/.pond")
   _ <- createDirectoryIfMissing True pondDir
   pond <- readIndex pondDir
   r <- getArgs >>= (\argv ->
@@ -167,7 +166,7 @@ main = do
       ["help"] -> printHelpAndExit
       "help":_ -> printHelpAndExit
       unk:_    -> do
-        putStrLn ("unknown command: " ++ unk)
+        putStrLn $ "unknown command: " ++ unk
         printUsageAndExit
       _ -> printUsageAndExit)
   print r

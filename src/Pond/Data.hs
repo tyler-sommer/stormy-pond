@@ -136,7 +136,6 @@ outerM pond = do
   id <- outer pond
   Map.lookup id (ripples pond)
 
-
 -- | 'with' returns a copy of the given 'Pond' with the given 'Ripple' added.
 with :: Ripple -> UTCTime -> Pond -> Pond
 with r t p =
@@ -153,6 +152,6 @@ with r t p =
       Nothing -> sum
     po = do
       sh <- Map.lookup osum (ripples p)
-      po <- Just (p { ripples = Map.insert osum (sh { next = Just sum }) (ripples p) })
-      sh <- Just (Shimmer { rippleId = sum, next = Nothing, date = t })
-      Just (po { ripples = Map.insert sum sh (ripples po), center = Just c, outer = Just sum })
+      po <- return $ p { ripples = Map.insert osum (sh { next = Just sum }) (ripples p) }
+      sh <- return $ Shimmer { rippleId = sum, next = Nothing, date = t }
+      return $ po { ripples = Map.insert sum sh (ripples po), center = Just c, outer = Just sum }
