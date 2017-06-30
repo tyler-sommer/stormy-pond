@@ -59,6 +59,8 @@ helpText = unlines
   , "\tadd [-r reflection [-r ...]] [summary]"
   , "\tedit\t\tEdit an existing ripple"
   , "\tedit <id>"
+  , "\tshow\t\tPrint the contents of a ripple"
+  , "\tshow <id>"
   , "\thelp\t\tShow help text"
   , ""
   , "pond is a utility for tracking and managing tasks and other lists. Each"
@@ -172,6 +174,13 @@ main = do
             writeRipple r pondDir
             exitWith (ExitSuccess)
           _       -> exitWith (ExitFailure 1)
+      "show":xs -> do
+        case searchM pond (head xs) of
+          Just sh -> do
+            r <- readRipple pondDir (rippleId sh)
+            print r
+            exitWith (ExitSuccess)
+          _       -> exitWith(ExitFailure 1)
       "list":xs -> do
         case centerM pond of
           Just s -> do
