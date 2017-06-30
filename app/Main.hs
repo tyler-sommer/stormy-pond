@@ -67,7 +67,7 @@ helpText = unlines
   , "pond contains a collection of items called ripples. Each ripple must have"
   , "a summary and may be tagged and grouped using labels called reflections."
   , ""
-  , "Invoking the \"add\" or \"edit\" commands without arguments will open your"
+  , "Invoking the \"add\" command without arguments will open your"
   , "system editor with a git-style format for modifying ripples."
   ]
 

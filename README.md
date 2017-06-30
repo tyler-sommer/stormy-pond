@@ -27,22 +27,45 @@ interacting with your data.
 
 ### Adding a ripple
 
-Add a new ripple to your pond with `pond add`. 
+Add a new ripple to your pond with `pond add`.
 
-You can optionally specify a summary and tags, but if no summary is 
-specified, pond will open your system editor to modify the ripple.
+You can optionally specify a summary and reflections.
+
+```bash
+# Add a ripple with the summary "I gotta do that thing"
+pond add "I gotta do that thing"
+
+# Add a ripple with the reflection "reminder"
+pond add "Call your mother" -r reminder
+```
+
+If no summary is specified, pond will open your system editor to modify the ripple.
+
+```bash
+# Opens your system editor to edit a new ripple
+pond add
+```
 
 ### Editing a ripple
 
-Not implemented, yet.
+Edit a ripple with `pond edit <id>`. This command will open your system editor to
+modify the ripple.
+
+```bash
+# Edit the ripple with the ID of "e87a0357778f5f935e0289cf24e091d4ea39c8612a612777cd8efc28b3a4ca4a"
+pond edit e87a0357778f5f935e0289cf24e091d4ea39c8612a612777cd8efc28b3a4ca4a
+```
 
 ### Listing ripples
 
-Not implemented, yet.
+List all ripples with `pond list`.
 
 
-Tips
-----
+### Showing ripple details
 
-Invoking the "add" or "edit" commands without arguments will open your
-system editor with a git-style format for modifying ripples.
+View the full contents of a ripple usin `pond show`.
+
+```bash
+# Show the contents of ripple with the ID of "e87a0357778f5f935e0289cf24e091d4ea39c8612a612777cd8efc28b3a4ca4a"
+pond show e87a0357778f5f935e0289cf24e091d4ea39c8612a612777cd8efc28b3a4ca4a
+```
