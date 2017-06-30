@@ -57,6 +57,8 @@ helpText = unlines
   , "\tlist\t\tList ripples"
   , "\tadd\t\tAdd a new ripple"
   , "\tadd [-r reflection [-r ...]] [summary]"
+  , "\tedit\t\tEdit an existing ripple"
+  , "\tedit <id>"
   , "\thelp\t\tShow help text"
   , ""
   , "pond is a utility for tracking and managing tasks and other lists. Each"
@@ -88,10 +90,6 @@ openEditor :: Ripple -> IO Ripple
 openEditor ripple = do
   tmpdir <- getTemporaryDirectory
   (file, tmp) <- openTempFile tmpdir "ripple.txt"
-  hPutStr tmp (summary ripple)
-  case description ripple of
-    Just desc -> hPutStrLn tmp (unlines ["", "", desc])
-    Nothing   -> hPutStrLn tmp ""
   hPutStr tmp (templateText ripple)
   hFlush tmp
   hClose tmp
@@ -129,12 +127,12 @@ writeRipple :: Ripple -> FilePath -> IO ()
 writeRipple ripple base = do
   writeFile (base ++ "/" ++ ((checksum ripple) ++ ".json")) (LS.unpack (encode ripple))
 
-printUsageAndExit :: IO Ripple
+printUsageAndExit :: IO ()
 printUsageAndExit = do
   putStrLn usageText
   exitWith (ExitFailure 1)
 
-printHelpAndExit :: IO Ripple
+printHelpAndExit :: IO ()
 printHelpAndExit = do
   putStrLn usageText
   putStr helpText
@@ -154,13 +152,26 @@ main = do
   pondDir <- getHomeDirectory >>= (\home -> return $ home ++ "/.pond")
   _ <- createDirectoryIfMissing True pondDir
   pond <- readIndex pondDir
-  r <- getArgs >>= (\argv ->
+  getArgs >>= (\argv ->
     case argv of
       "add":xs -> do
         let s = parseArgs xs
-        case s of
+        r <- case s of
           (Ripple "" _ _) -> openEditor s
           _               -> return $ s
+        now <- getCurrentTime
+        writeIndex (with r now pond) pondDir
+        writeRipple r pondDir
+      "edit":xs -> do
+        let x = head xs
+        case searchM pond x of
+          Just sh -> do
+            now <- getCurrentTime
+            r <- readRipple pondDir (rippleId sh) >>= openEditor
+            writeIndex (replaceWith sh r now pond) pondDir
+            writeRipple r pondDir
+            exitWith (ExitSuccess)
+          _       -> exitWith (ExitFailure 1)
       "list":xs -> do
         case centerM pond of
           Just s -> do
@@ -173,8 +184,3 @@ main = do
         putStrLn $ "unknown command: " ++ unk
         printUsageAndExit
       _ -> printUsageAndExit)
-  print r
-  now <- getCurrentTime
-  writeIndex (with r now pond) pondDir
-  writeRipple r pondDir
-  LS.putStrLn (encode r)

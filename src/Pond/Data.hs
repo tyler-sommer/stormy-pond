@@ -18,11 +18,11 @@ module Pond.Data
 
   -- Modifying Ponds
   , with
+  , replaceWith
 
   -- Navigating Shimmers
   , centerM
   , outerM
-  , prevM
   , nextM
   , searchM
   ) where
@@ -149,6 +149,28 @@ outerM pond = do
 searchM :: Pond -> RippleID -> Maybe Shimmer
 searchM pond id =
   Map.lookup id (ripples pond)
+
+-- | 'replaceWith' returns a copy of 'Pond' with the given 'Shimmer'
+-- replaced with the given 'Ripple'.
+replaceWith :: Shimmer -> Ripple -> UTCTime -> Pond -> Pond
+replaceWith fs to t p =
+  pp { ripples = Map.insert tsum sh (ripples pp), center = cn, outer = ou }
+  where
+    tsum = checksum to
+    fsum = rippleId fs
+    pn = case nextM p fs of
+      Just ns -> p { ripples = Map.insert (rippleId ns) (ns { prev = Just tsum }) (ripples p) }
+      Nothing -> p
+    pp = case prevM pn fs of
+      Just ps -> pn { ripples = Map.insert (rippleId ps) (ps { next = Just tsum }) (ripples pn) }
+      Nothing -> pn
+    sh = Shimmer { rippleId = tsum, prev = prev fs, next = next fs, date = t }
+    ou = if outer pp == Just fsum
+      then Just tsum
+      else outer pp
+    cn = if center pp == Just fsum
+      then Just tsum
+      else center pp
 
 -- | 'with' returns a copy of the given 'Pond' with the given 'Ripple' added.
 with :: Ripple -> UTCTime -> Pond -> Pond
