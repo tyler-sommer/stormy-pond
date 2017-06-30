@@ -22,7 +22,9 @@ module Pond.Data
   -- Navigating Shimmers
   , centerM
   , outerM
+  , prevM
   , nextM
+  , searchM
   ) where
 
 import Data.Aeson
@@ -96,6 +98,7 @@ instance FromJSON Ripple
 data Shimmer =
   Shimmer
   { rippleId :: RippleID
+  , prev :: Maybe RippleID
   , next :: Maybe RippleID
   , date :: UTCTime
   } deriving (Generic, Show, Eq)
@@ -124,6 +127,12 @@ centerM pond = do
   id <- center pond
   Map.lookup id (ripples pond)
 
+-- | prevM returns the previous 'Shimmer' or Nothing.
+prevM :: Pond -> Shimmer -> Maybe Shimmer
+prevM pond s = do
+  id <- prev s
+  Map.lookup id (ripples pond)
+
 -- | 'nextM' returns the next 'Shimmer' or Nothing.
 nextM :: Pond -> Shimmer -> Maybe Shimmer
 nextM pond s = do
@@ -136,22 +145,21 @@ outerM pond = do
   id <- outer pond
   Map.lookup id (ripples pond)
 
+-- | 'searchM' returns the specified 'Shimmer' or Nothing.
+searchM :: Pond -> RippleID -> Maybe Shimmer
+searchM pond id =
+  Map.lookup id (ripples pond)
+
 -- | 'with' returns a copy of the given 'Pond' with the given 'Ripple' added.
 with :: Ripple -> UTCTime -> Pond -> Pond
 with r t p =
-  case po of
-    Just res -> res
-    Nothing  -> p
+  pn { ripples = Map.insert sum sh (ripples pn), center = Just c, outer = Just sum }
   where
     sum = checksum r
     c = case center p of
       Just ce -> ce
       Nothing -> sum
-    osum = case outer p of
-      Just oe -> oe
-      Nothing -> sum
-    po = do
-      sh <- Map.lookup osum (ripples p)
-      po <- return $ p { ripples = Map.insert osum (sh { next = Just sum }) (ripples p) }
-      sh <- return $ Shimmer { rippleId = sum, next = Nothing, date = t }
-      return $ po { ripples = Map.insert sum sh (ripples po), center = Just c, outer = Just sum }
+    pn = case outerM p of
+      Just os -> p { ripples = Map.insert (rippleId os) (os { next = Just sum }) (ripples p) }
+      Nothing -> p
+    sh = Shimmer { rippleId = sum, prev = outer pn, next = Nothing, date = t }

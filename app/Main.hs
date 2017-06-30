@@ -37,7 +37,7 @@ parseEditorLine ParseAny r (s:xs)        = parseEditorLine ParseDesc (r { summar
 parseEditorLine ParseDesc r ("":xs)      = parseEditorLine ParseDesc r xs
 parseEditorLine ParseDesc r (("#"):xs)   = parseEditorLine ParseDesc r xs
 parseEditorLine ParseDesc r (('#':_):xs) = parseEditorLine ParseDesc r xs
-parseEditorLine ParseDesc r (('F':'a':'c':'e':'t':':':' ':s):xs) =
+parseEditorLine ParseDesc r (('R':'e':'f':'l':'e':'c':'t':'i':'o':'n':':':s):xs) =
   parseEditorLine ParseTag r ([s] ++ xs)
 parseEditorLine ParseDesc r (s:xs) =
   case (description r) of
@@ -119,7 +119,11 @@ readRipple base sum = do
 
 writeIndex :: Pond -> FilePath -> IO ()
 writeIndex pond base = do
-  writeFile (base ++ "/" ++ "index.json") (LS.unpack (encode pond))
+  let name = (base ++ "/" ++ "index.json")
+  let tmpName = (name ++ ".tmp")
+  writeFile tmpName (LS.unpack (encode pond))
+  catchIOError (removeFile name) (\_ -> return $ ())
+  renameFile tmpName name
 
 writeRipple :: Ripple -> FilePath -> IO ()
 writeRipple ripple base = do
