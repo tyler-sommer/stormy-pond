@@ -164,28 +164,22 @@ main = do
         now <- getCurrentTime
         writeIndex (with r now pond) pondDir
         writeRipple r pondDir
-      "edit":xs -> do
-        let x = head xs
-        case searchM pond x of
-          Just sh -> do
-            now <- getCurrentTime
-            r <- readRipple pondDir (rippleId sh) >>= openEditor
-            writeIndex (replaceWith sh r now pond) pondDir
-            writeRipple r pondDir
-            exitWith (ExitSuccess)
-          _       -> exitWith (ExitFailure 1)
-      "show":xs -> do
-        case searchM pond (head xs) of
-          Just sh -> do
-            r <- readRipple pondDir (rippleId sh)
-            print r
-            exitWith (ExitSuccess)
-          _       -> exitWith(ExitFailure 1)
+      "edit":x:xs -> case searchM pond x of
+        Just sh -> do
+          now <- getCurrentTime
+          r <- readRipple pondDir (rippleId sh) >>= openEditor
+          writeIndex (replaceWith sh r now pond) pondDir
+          writeRipple r pondDir
+        _       -> exitWith (ExitFailure 1)
+      "show":x:xs -> case searchM pond x of
+        Just sh -> do
+          r <- readRipple pondDir (rippleId sh)
+          print r
+        _       -> exitWith (ExitFailure 1)
       "list":xs -> do
         case centerM pond of
           Just s -> do
             printShimmer pond s
-            exitWith ExitSuccess
           _ -> exitWith (ExitFailure 1)
       ["help"] -> printHelpAndExit
       "help":_ -> printHelpAndExit
